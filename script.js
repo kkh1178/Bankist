@@ -62,11 +62,18 @@ const inputCloseUsername = document.querySelector(".form__input--user");
 const inputClosePin = document.querySelector(".form__input--pin");
 
 // Use containerMovements.innerHTML to add a new movements row for each of the account movements
-const displayMovements = function (movements) {
+const displayMovements = function (movements, sort = false) {
     // Removing any rows?
     containerMovements.innerHTML = "";
 
-    movements.forEach(function (move, index) {
+    // if sort is true, create a copy of the movements array using slice and sort in ascending order (a-b);
+    // Sort is changed from false to true using an eventhandler
+    const sortMovements = sort
+        ? movements.slice().sort((a, b) => a - b)
+        : movements;
+
+    // Adding html movements row for everything in the movements array for the user
+    sortMovements.forEach(function (move, index) {
         const type = move > 0 ? "deposit" : "withdrawal";
         const html = `
         <div class="movements__row">
@@ -211,12 +218,73 @@ btnTransfer.addEventListener("click", function (e) {
     }
 });
 
+btnLoan.addEventListener("click", function (e) {
+    e.preventDefault();
+    const amount = Number(inputLoanAmount.value);
+
+    if (
+        amount > 0 &&
+        currentAccount.movements.some((move) => move >= amount * 0.1)
+    ) {
+        // Add a loan deposit
+        currentAccount.movements.push(amount);
+
+        // Update UI for the current account
+        updateUI(currentAccount);
+
+        // clear the input fields
+    }
+    inputLoanAmount.value = "";
+});
+
+btnClose.addEventListener("click", function (e) {
+    e.preventDefault();
+
+    // Verify that the account user is only able to delete their own account
+    if (
+        Number(inputClosePin.value) === currentAccount.pin &&
+        inputCloseUsername.value === currentAccount.username
+    ) {
+        const index = accounts.findIndex(
+            (acc) => acc.username === currentAccount.username
+        );
+        console.log(index);
+
+        // Delete the account using splice
+        accounts.splice(index, 1);
+
+        // Hide UI
+        containerApp.style.opacity = 0;
+    }
+    console.log(`${currentAccount.username}'s account has been deleted`);
+    console.log(accounts);
+    // Clear the inputs
+    inputCloseUsername.value = inputClosePin.value = "";
+});
+
+// Preserving the sorted state in a variable
+let sorted = false;
+// Listening for a click on the sort button
+btnSort.addEventListener("click", function (e) {
+    e.preventDefault();
+    // The above function that will set the sort value to the opposite of
+    displayMovements(currentAccount.movements, !sorted);
+    sorted = !sorted;
+});
+
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 
 // // Practicing
 
 // const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
+
+// // Every element in the array must meet the conditions and every will return a boolean
+// console.log(account4.movements.every((move) => move > 0));
+
+// // // at least one of the elements needs to meet the conditions and will return boolean
+// const anyDeposits = movements.some((move) => move > 0);
+// console.log(anyDeposits);
 
 // // calcDisplaySummary(account1.movements);
 
